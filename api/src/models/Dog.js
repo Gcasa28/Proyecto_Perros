@@ -20,16 +20,20 @@ module.exports = (sequelize) => {
       isUrl:true
     },
     height:{
-      type:DataTypes.INTEGER,
+      type:DataTypes.STRING,
       allowNull:false
     },
     weight:{
-      type:DataTypes.INTEGER,
+      type:DataTypes.STRING,
       allowNull:false
     },
     years: {
-      type:DataTypes.INTEGER,
+      type:DataTypes.STRING,
       allowNull:false
-    }
-  });
+    },
+    created:{
+      type: DataTypes.BOOLEAN,
+      defaultValue:true
+    },
+  }, {timestamps:false});
 };
