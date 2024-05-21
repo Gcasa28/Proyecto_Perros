@@ -24,7 +24,7 @@ module.exports = (sequelize) => {
       allowNull:false
     },
     weight:{
-      type:DataTypes.STRING,
+      type:DataTypes.INTEGER,
       allowNull:false
     },
     years: {
