@@ -1,35 +1,26 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import axios from 'axios'
-import { useSelector } from 'react-redux'
 
-function DetailPage({goHome}) {
-
-   const allDogs = useSelector((state) => state.allDogs)
+function DetailPage() {
 
    const [dog, setDog] = useState({})
 
-   const { name } = useParams()
+   const { id } = useParams()
 
     useEffect(() => {
-          axios(`http://localhost:3001/dogs?name=${name}`).then(
+          axios(`http://localhost:3001/dogs/${id}`).then(
              ({ data }) => {
-               if (data && data.length > 0) {
-                  const dogFromAPI = data[0]
-                  const dogFromState = allDogs.find((d) => d.name === name)
-                  
-                  if (dogFromState) {
-                    dogFromAPI.image = dogFromState.image
-                  }
-                  
-                  setDog(dogFromAPI)
-                } else {
-                  window.alert('No hay personajes con ese nombre')
+               if (data.name) {
+                  setDog(data)
+                } 
+                else if (data[0].name) {
+                  setDog(data[0])
                 }
              }
           )
           return setDog({});
-       }, [name])
+       }, [id])
 
   return (
     <div>
@@ -42,12 +33,10 @@ function DetailPage({goHome}) {
                position: 'relative',
                margin: '20px auto'
            }}/>
-      <h2> <span style={{ color: '#999' }}>Vida:</span> {dog.years} </h2>
-      <h2> <span style={{ color: '#999' }}>Altura:</span> {dog.height} </h2>
-      <h2> <span style={{ color: '#999' }}>Peso:</span> {dog.weight} </h2>
-      <h2> <span style={{ color: '#999' }}>Temperamentos:</span> {dog.temperament} </h2>
-
-      <button onClick={goHome}>Pagina Principal</button>
+      <h2> <span style={{ color: '#999' }}>Vida:</span> {dog.years}</h2>
+      <h2> <span style={{ color: '#999' }}>Altura:</span> {dog.height} <span> cm</span> </h2>
+      <h2> <span style={{ color: '#999' }}>Peso:</span> {dog.weight} <span> Kg</span> </h2>
+      <h2> <span style={{ color: '#999' }}>Temperamentos:</span> <br/> {dog.temperaments} </h2>
     </div>
   )
 }

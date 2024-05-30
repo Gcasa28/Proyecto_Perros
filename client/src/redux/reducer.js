@@ -1,4 +1,4 @@
-import {  GET_DOGS, ORDER, FILTER } from "./action-types";
+import {  GET_DOGS, ORDER, FILTER, CREATE_DOG, FILTER_DOG } from "./action-types";
 
 const initialState = {
     allDogs: [],
@@ -8,15 +8,34 @@ const initialState = {
  
 const rootReducer = (state = initialState, action) => {
         switch (action.type) {
-
-            case FILTER:
-                if(action.payload === "All") return {
-                    ...state,
-                    allDogs: [...state.originalDogs]
-                }
+            
+            case GET_DOGS:
                 return {
-                    ...state, allDogs: [ ...state.originalDogs.filter( dog => {return dog.temperament.includes(action.payload)})]
+                    ...state,
+                    allDogs: action.payload,
+                    originalDogs: action.payload
                 }
+
+                case FILTER:
+                    if(action.payload === "All") {
+                        return {
+                            ...state,
+                            allDogs: [...state.originalDogs]
+                        }
+                    }
+                    
+                    const filteredDogs = state.originalDogs.filter(dog => {
+                        if (!dog.temperaments) {
+                            return action.payload === "sin temperamento";
+                        }
+                        const temperamentsArray = dog.temperaments.split(", ").map(temp => temp.trim());
+                        return temperamentsArray.includes(action.payload);
+                    });
+                
+                    return {
+                        ...state, 
+                        allDogs: filteredDogs
+                    };
 
                 case ORDER:
                     const orderCopy = [...state.allDogs];
@@ -53,12 +72,38 @@ const rootReducer = (state = initialState, action) => {
                         allDogs: orderCopy
                     };
 
-            case GET_DOGS:
+
+            case CREATE_DOG:
                 return {
                     ...state,
                     allDogs: action.payload,
-                    originalDogs: action.payload
+                } 
+
+            case FILTER_DOG:
+                if(action.payload === "todos") {
+                    return {
+                        ...state,
+                        allDogs: [...state.originalDogs]
+                    }
                 }
+                if(action.payload === "api") {
+                    return {
+                        ...state,
+                        allDogs: [...state.originalDogs].filter((dog) => {
+                            return dog.created === false
+                        })
+                    }
+                }
+                if(action.payload === "bdd") {
+                    return {
+                        ...state,
+                        allDogs: [...state.originalDogs].filter((dog) => {
+                            return dog.created === true
+                        })
+                    }
+                }
+            
+            
         
             default:
                 return {...state}

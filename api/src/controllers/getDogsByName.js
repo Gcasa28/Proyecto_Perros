@@ -1,7 +1,6 @@
 const axios = require("axios")
-const { extractDogInfo } = require("../utils")
-const { Op } = require("sequelize")
-const { Dog } = require("../db")
+const { extractDogInfo, dogsDbWithTemperaments } = require("../utils")
+const { Dog, Temperament } = require("../db")
 
 
 
@@ -15,11 +14,13 @@ const getDogsByName = async (name) => {
         return extractDogInfo(dog)
     })
 
-    const dogDB = await Dog.findAll({
-        where: {
-            name: {
-                [Op.like]: `%${name}%`
-            }}})
+    const infoDB = await Dog.findAll(
+        { 
+            include: Temperament  // Incluye los temperamentos asociados   
+        },
+        {where: {name: name}})
+
+    const dogDB = dogsDbWithTemperaments(infoDB)
 
     const allDogs = [...dogApi, ...dogDB]
 

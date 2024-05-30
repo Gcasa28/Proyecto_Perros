@@ -1,37 +1,42 @@
-const {Temperament} = require("./db")
 const axios = require("axios")
+const { Temperament } = require("./db")
+const { API_KEY } = process.env;
 
-const API_KEY = "live_OqlGPmpiVXajxX6yIk14fQvRsBthN6984m70GRe7Sd03Jrj6cDYZbzdbKIYr90R8"
 
 const extractDogInfo = (dog) => {
     return {
         id: dog.id,
         name: dog.name,
-        weight: media(dog.weight?.metric),
+        image: dog.image?.url,
+        weight: dog.weight?.metric,
         height: dog.height?.metric, 
         years: dog.life_span,
-        temperament: separadorTemperamentos(dog.temperament),
-        image: dog.image?.url,
+        temperaments: dog.temperament,
         created: false
     }
 }
 
-const media = (string) => {
-  const numeros = string.split(" ").map(num => parseFloat(num)).filter(num => !isNaN(num));
-    if (numeros.length === 0) {
-      return 0
-    }
-  const suma = numeros.reduce((total, num) => total + num, 0);
-  const media = suma / numeros.length;
-  return media;
+const dogsDbWithTemperaments = (infoDB) => { 
+  return infoDB.map(dog => {
+      const temperaments = (dog.temperaments).map(temp => temp.name);   // Obtiene los nombres de los temperamentos asociados
+      return {
+          id: dog.id,
+          name: dog.name,
+          image: dog.image,
+          weight: dog.weight,
+          height: dog.height,
+          years: dog.years,
+          temperaments: temperaments.join(', '),
+          created: dog.created
+      };  // Crea un nuevo objeto con las propiedades de la raza y los temperamentos asociados
+  })  // Mapea los resultados para agregar los temperamentos asociados a cada raza de perro de la BD
 };
 
-const separadorTemperamentos = (temperamentos) => {
-  if (temperamentos) {
-    return temperamentos.split(",").map(temp => temp.trim());
-  }
-  return [];
-};
+// const separadorTemperamentos = (temperamentos) => {
+//   if (temperamentos) {
+//     return temperamentos.split(",").map(temp => temp.trim());
+//   }
+// };
 
 const checkIfEmpty = async () => {
     try {
@@ -44,25 +49,24 @@ const checkIfEmpty = async () => {
     }
 };
 
-  const populateTypes = async () => {
+  const populateTemperaments = async () => {
     try {
-      const { data } = await axios.get("https://api.thedogapi.com/v1/breeds/");
+      const { data } = await axios.get(`https://api.thedogapi.com/v1/breeds?api_key=${API_KEY}`);
   
-      const temperamentos = new Set();
+      
+      const temperamentsArray = data
+      .map(breed => breed.temperament)  // Extrae temperamentos
+      .filter(Boolean) // Filtra temperamentos no definidos
+      .map(temp => temp.split(', '))  // Divide por comas
+      .flat()
+      
+      const uniqueTemperaments = [...new Set(temperamentsArray)];
+    
   
-      data.forEach(dog => {
-        if (dog.temperament) {
-          dog.temperament.split(",").map(t => t.trim()).forEach(t => temperamentos.add(t));
-        }
-      });
-  
-      const dogsTemperamentos = Array.from(temperamentos).map(temp => ({ name: temp }));
-  
-      await Temperament.bulkCreate(dogsTemperamentos, {
-        ignoreDuplicates: true, 
-      });
-  
-      return Array.from(temperamentos);
+      await Promise.all(uniqueTemperaments.map(async (name) => {
+        await Temperament.findOrCreate({ where: { name } });
+    }))
+    
     } catch (error) {
       console.error(error);
       throw new Error('Error fetching temperaments');
@@ -72,4 +76,4 @@ const checkIfEmpty = async () => {
 
 
 
-module.exports = { API_KEY, extractDogInfo, checkIfEmpty, populateTypes }
+module.exports = { extractDogInfo, checkIfEmpty, populateTemperaments, dogsDbWithTemperaments }

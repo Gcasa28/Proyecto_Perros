@@ -1,6 +1,7 @@
 const axios = require('axios')
-const { API_KEY, extractDogInfo } = require("../utils")
-const { Dog } = require("../db")
+const { extractDogInfo, dogsDbWithTemperaments } = require("../utils")
+const { Dog, Temperament } = require("../db")
+const {API_KEY} = process.env
 
 
 const getDogs = async () => {
@@ -11,7 +12,12 @@ const getDogs = async () => {
         return extractDogInfo(dog)
         })
 
-    const dogsDB = await Dog.findAll()
+    const infoDB = await Dog.findAll({
+        include: Temperament  // Incluye los temperamentos asociados   
+    })
+
+    const dogsDB = dogsDbWithTemperaments(infoDB);
+        
 
     const allDogs = [...dogsApi, ...dogsDB]
         

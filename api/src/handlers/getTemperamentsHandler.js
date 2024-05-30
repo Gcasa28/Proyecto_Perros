@@ -1,19 +1,17 @@
-const {checkIfEmpty , populateTypes} = require('../utils')
-const { Temperament } = require("../db")
+const {checkIfEmpty , populateTemperaments} = require('../utils')
 
 
 const getTemperamentsHandler = async (req, res) => {
     try {
         const empty = await checkIfEmpty()
         if (empty) {
-            const response = await populateTypes()
-            res.status(200).json(response)
+            await populateTemperaments()
+            res.status(200).send("Tabla poblada")
         } else {
-            const temperaments = await Temperament.findAll();
-            res.status(200).json(temperaments);
+            return res.status(200).send('La tabla "temperaments" ya tiene datos')
         }
     } catch (error) {
-        res.status(400).json({ error: error.message })
+        return res.status(400).json({ error: error.message })
     }
 }
 
